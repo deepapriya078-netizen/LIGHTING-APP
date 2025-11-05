@@ -1,0 +1,36 @@
+"use client";
+import { useEffect, useState } from "react";
+import { supabaseBrowser } from "@/lib/supabase";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
+
+// Prize wheel (UI only for now, real reward logic in DB)
+const spinRewards = [
+  { label: "5 Diamonds", type: "diamonds", amount: 5 },
+  { label: "10 Diamonds", type: "diamonds", amount: 10 },
+  { label: "5 Tokens", type: "tokens", amount: 5 },
+  { label: "10 Tokens", type: "tokens", amount: 10 },
+  { label: "$5 USDT", type: "usdt", amount: 5 },
+  { label: "$10 USDT", type: "usdt", amount: 10 },
+  { label: "$0.2 USDT", type: "usdt", amount: 0.2 },
+  { label: "25 Diamonds", type: "diamonds", amount: 25 },
+];
+
+export default function SpinPage() {
+  const sb = supabaseBrowser();
+  const r = useRouter();
+  const [canSpin, setCanSpin] = useState(true);
+  const [result, setResult] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return r.replace("/auth/login");
+
+    const { data } = await sb.rpc("can_spin_today");
+    setCanSpin(data === true);
+  }
+
+  async function spin() {
+    if (!can
